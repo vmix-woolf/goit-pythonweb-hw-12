@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "goit-pythonweb-hw-10"
+version = "0.1.0"
+description = ""
+authors = ["Viacheslav Mykhailov <viacheslav.leo.mykhailov@gmail.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.12,<4.0"
+fastapi = "^0.121.2"
+uvicorn = {extras = ["standard"], version = "^0.38.0"}
+sqlalchemy = "^2.0.44"
+asyncpg = "^0.30.0"
+alembic = "^1.17.2"
+pydantic = {extras = ["email"], version = "^2.12.4"}
+pydantic-settings = "^2.12.0"
+python-dotenv = "^1.2.1"
+greenlet = "^3.2.4"
+
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+python-jose = "^3.5.0"
+fastapi-mail = "^1.5.8"
+slowapi = "^0.1.9"
+cloudinary = "^1.44.1"
+python-multipart = "^0.0.20"
+
+[build-system]
+requires = ["poetry-core>=2.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+

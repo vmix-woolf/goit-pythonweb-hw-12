@@ -1,0 +1,32 @@
+.venv/
+# PyCache
+__pycache__
+
+*.pyc
+*.pyo
+*.pyd
+.vscode/
+.git
+
+# macOS system files
+.DS_Store
+# Env files
+.env
+*.env
+
+# Alembic migrations cache
+alembic.ini
+alembic/versions/__pycache__/
+
+*.log
+
+# Coverage / testing
+htmlcov/
+.coverage
+.coverage.*
+.cache/
+# PyCharm
+.idea/
+# MyPy / Ruff
+.mypy_cache/
+.ruff_cache/
