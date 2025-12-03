@@ -23,6 +23,13 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """
     Створює JWT токен доступу.
+
+    Args:
+        data: Дані, які будуть закодовані в токен (наприклад email).
+        expires_delta: Час життя токена. Якщо не передано – використовується значення за замовчуванням.
+
+    Returns:
+        str: Підписаний JWT токен.
     """
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
@@ -33,7 +40,16 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 async def verify_token(token: str) -> TokenData:
     """
-    Перевіряємо JWT токен та повертаємо email користувача.
+    Перевіряє валідність JWT токена.
+
+    Args:
+        token: JWT токен для перевірки.
+
+    Returns:
+        TokenData: Об'єкт з email користувача, витягнутим з токена.
+
+    Raises:
+        HTTPException: Якщо токен недійсний або протермінований.
     """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -54,7 +70,16 @@ async def verify_token(token: str) -> TokenData:
 
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     """
-    Повертаємо поточного користувача на основі валідного JWT токена.
+    Повертає поточного користувача на основі переданого JWT токена.
+
+    Args:
+        token: JWT токен із заголовка Authorization.
+
+    Returns:
+        User: Поточний користувач, якщо токен валідний.
+
+    Raises:
+        HTTPException: Якщо користувача не знайдено або токен недійсний.
     """
     token_data = await verify_token(token)
 

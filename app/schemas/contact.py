@@ -2,8 +2,10 @@ from pydantic import BaseModel, EmailStr
 from datetime import date
 
 
-# Базова схема (спільні поля)
 class ContactBase(BaseModel):
+    """
+    Базова схема контакту з основними полями.
+    """
     first_name: str
     last_name: str
     email: EmailStr
@@ -12,13 +14,17 @@ class ContactBase(BaseModel):
     additional_info: str | None = None
 
 
-# Створення контакту
 class ContactCreate(ContactBase):
+    """
+    Схема для створення нового контакту.
+    """
     pass
 
 
-# Оновлення контакту
 class ContactUpdate(BaseModel):
+    """
+    Схема для часткового оновлення контакту.
+    """
     first_name: str | None = None
     last_name: str | None = None
     email: EmailStr | None = None
@@ -27,8 +33,10 @@ class ContactUpdate(BaseModel):
     additional_info: str | None = None
 
 
-# Відповідь API
 class ContactOut(ContactBase):
+    """
+    Схема відповіді API для повернення даних контакту.
+    """
     id: int
 
     class Config:

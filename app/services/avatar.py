@@ -2,6 +2,7 @@ import cloudinary
 import cloudinary.uploader
 from app.config import settings
 
+# Налаштування Cloudinary при старті застосунку
 cloudinary.config(
     cloud_name=settings.cloudinary_name,
     api_key=settings.cloudinary_api_key,
@@ -9,8 +10,17 @@ cloudinary.config(
     secure=True
 )
 
+
 async def upload_avatar(file):
-    """Upload avatar to Cloudinary and return URL."""
+    """
+    Завантажує файл аватара в Cloudinary.
+
+    Args:
+        file: Файл, отриманий від користувача (UploadFile).
+
+    Returns:
+        str: URL завантаженого аватара.
+    """
     result = cloudinary.uploader.upload(
         file.file,
         folder="avatars",

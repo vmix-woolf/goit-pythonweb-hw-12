@@ -1,30 +1,40 @@
 from pydantic import BaseModel, EmailStr
 
 
-# Базова схема користувача
 class UserBase(BaseModel):
+    """
+    Базова схема користувача з ключовими полями.
+    """
     email: EmailStr
 
 
-# Схема для створення користувача
 class UserCreate(UserBase):
+    """
+    Схема для реєстрації нового користувача.
+    """
     username: str
     password: str
 
 
-# Схема для логіну користувача
 class UserLogin(UserBase):
+    """
+    Схема для авторизації користувача.
+    """
     password: str
 
 
-# Схема для оновлення профілю
 class UserUpdate(BaseModel):
+    """
+    Схема для часткового оновлення профілю користувача.
+    """
     username: str | None = None
     password: str | None = None
 
 
-# Схема відповіді (повернення користувача)
 class UserOut(UserBase):
+    """
+    Схема відповіді API з даними користувача.
+    """
     id: int
     username: str
     is_verified: bool
@@ -33,11 +43,16 @@ class UserOut(UserBase):
         from_attributes = True
 
 
-# Схема токена доступу
 class Token(BaseModel):
+    """
+    Схема токена доступу, який повертається при вході.
+    """
     access_token: str
     token_type: str = "bearer"
 
 
 class TokenData(BaseModel):
+    """
+    Дані, витягнуті з JWT токена.
+    """
     email: str
