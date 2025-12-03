@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "goit-pythonweb-hw-10"
+name = "goit-pythonweb-hw-12"
 version = "0.1.0"
 description = ""
 authors = ["Viacheslav Mykhailov <viacheslav.leo.mykhailov@gmail.com>"]
@@ -31,9 +31,15 @@ pytest = "^9.0.1"
 pytest-asyncio = "^1.3.0"
 pytest-cov = "^7.0.0"
 httpx = "^0.28.1"
+sphinx = "7.3.0"
+sphinx-autobuild = "^2025.8.25"
 
 [build-system]
 requires = ["poetry-core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+docs = "sphinx.cmd.build:main"
+
 
 
