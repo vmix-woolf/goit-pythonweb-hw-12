@@ -2,6 +2,7 @@ import pytest
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 from httpx import AsyncClient
+from httpx import ASGITransport
 
 from app.main import app
 from app.models.user import User
@@ -50,5 +51,6 @@ def mock_cloudinary_upload():
 # async-клієнт для інтеграційних тестів
 @pytest.fixture
 async def async_client():
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client

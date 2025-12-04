@@ -5,12 +5,18 @@ from app.schemas.contact import ContactCreate, ContactUpdate
 
 
 async def get_contacts(session: AsyncSession, user_id: int):
+    """
+    Повертає всі контакти користувача.
+    """
     stmt = select(Contact).where(Contact.owner_id == user_id)
     result = await session.execute(stmt)
     return result.scalars().all()
 
 
 async def get_contact_by_id(session: AsyncSession, contact_id: int, user_id: int):
+    """
+    Повертає контакт за його ID, якщо він належить користувачу.
+    """
     stmt = select(Contact).where(
         Contact.id == contact_id,
         Contact.owner_id == user_id
@@ -20,6 +26,9 @@ async def get_contact_by_id(session: AsyncSession, contact_id: int, user_id: int
 
 
 async def create_contact(session: AsyncSession, data: ContactCreate, user_id: int):
+    """
+    Створює новий контакт для вказаного користувача.
+    """
     contact = Contact(
         **data.model_dump(),
         owner_id=user_id,
@@ -31,6 +40,9 @@ async def create_contact(session: AsyncSession, data: ContactCreate, user_id: in
 
 
 async def update_contact(session: AsyncSession, contact: Contact, data: ContactUpdate):
+    """
+    Оновлює існуючий контакт частковими даними.
+    """
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(contact, field, value)
 
@@ -40,12 +52,23 @@ async def update_contact(session: AsyncSession, contact: Contact, data: ContactU
 
 
 async def delete_contact(session: AsyncSession, contact: Contact):
+    """
+    Видаляє контакт користувача.
+    """
     await session.delete(contact)
     await session.commit()
 
 
-async def search_contacts(session: AsyncSession, user_id: int,
-                          first_name=None, last_name=None, email=None):
+async def search_contacts(
+    session: AsyncSession,
+    user_id: int,
+    first_name=None,
+    last_name=None,
+    email=None
+):
+    """
+    Пошук контактів користувача за частковими полями.
+    """
     stmt = select(Contact).where(Contact.owner_id == user_id)
 
     if first_name:
@@ -60,6 +83,9 @@ async def search_contacts(session: AsyncSession, user_id: int,
 
 
 async def get_upcoming_birthdays(session: AsyncSession, user_id: int):
+    """
+    Повертає контакти, у яких день народження буде протягом наступних 7 днів.
+    """
     from datetime import date, timedelta
 
     today = date.today()
@@ -72,7 +98,6 @@ async def get_upcoming_birthdays(session: AsyncSession, user_id: int):
     result = await session.execute(stmt)
     contacts = result.scalars().all()
 
-    # фільтруємо в Python за MM-DD
     upcoming = []
     for c in contacts:
         b = c.birthday

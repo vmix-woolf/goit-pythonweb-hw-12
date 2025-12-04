@@ -6,33 +6,36 @@ from app.models.user import User
 from app.schemas.user import UserCreate
 
 
-# Контекст для хешування паролів
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-# Перевірка пароля
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Перевіряє чи співпадає пароль з хешем."""
+    """
+    Перевіряє чи відповідає пароль збереженому bcrypt-хешу.
+    """
     return pwd_context.verify(plain_password, hashed_password)
 
 
-# Хешування пароля
 def hash_password(password: str) -> str:
-    """Створює bcrypt-хеш пароля."""
+    """
+    Створює bcrypt-хеш для нового пароля.
+    """
     return pwd_context.hash(password)
 
 
-# Отримати користувача за email
 async def get_user_by_email(session: AsyncSession, email: str) -> User | None:
-    """Повертає користувача за email або None."""
+    """
+    Повертає користувача за email або None, якщо його не існує.
+    """
     stmt = select(User).where(User.email == email)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 
 
-# Створити нового користувача
 async def create_user(session: AsyncSession, user_data: UserCreate) -> User:
-    """Створює нового користувача з хешованим паролем."""
+    """
+    Створює нового користувача з хешованим паролем та повертає його.
+    """
     hashed_pwd = hash_password(user_data.password)
 
     new_user = User(
@@ -49,9 +52,11 @@ async def create_user(session: AsyncSession, user_data: UserCreate) -> User:
     return new_user
 
 
-# Аутентифікація користувача
 async def authenticate_user(session: AsyncSession, email: str, password: str) -> User | None:
-    """Перевіряє email та пароль. Повертає користувача або None."""
+    """
+    Перевіряє email та пароль.
+    Повертає користувача, якщо авторизація успішна.
+    """
     user = await get_user_by_email(session, email)
 
     if not user:
