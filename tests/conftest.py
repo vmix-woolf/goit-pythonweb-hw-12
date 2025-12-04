@@ -1,14 +1,13 @@
 import pytest
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
-from httpx import AsyncClient
-from httpx import ASGITransport
-
+from httpx import AsyncClient, ASGITransport
 from app.main import app
-from app.models.user import User
 
 
-# подменяем event loop для pytest-asyncio
+# ---------------------------
+# Настройка event loop
+# ---------------------------
 @pytest.fixture(scope="session")
 def event_loop():
     loop = asyncio.new_event_loop()
@@ -16,7 +15,9 @@ def event_loop():
     loop.close()
 
 
-# мок-сесія SQLAlchemy
+# ---------------------------
+# MOCK FIXTURES (UNIT TESTS)
+# ---------------------------
 @pytest.fixture
 def mock_session():
     session = AsyncMock()
@@ -28,9 +29,16 @@ def mock_session():
     return session
 
 
-# мок користувача для unit-тестів
+@pytest.fixture
+def mock_cloudinary_upload():
+    with patch("cloudinary.uploader.upload") as mock_upload:
+        mock_upload.return_value = {"secure_url": "https://example.com/avatar.png"}
+        yield mock_upload
+
+
 @pytest.fixture
 def mock_user():
+    from app.models.user import User
     return User(
         id=1,
         email="test@example.com",
@@ -40,15 +48,9 @@ def mock_user():
     )
 
 
-# мок Cloudinary uploader
-@pytest.fixture
-def mock_cloudinary_upload():
-    with patch("cloudinary.uploader.upload") as mock_upload:
-        mock_upload.return_value = {"secure_url": "https://example.com/avatar.png"}
-        yield mock_upload
-
-
-# async-клієнт для інтеграційних тестів
+# ---------------------------
+# ASYNC CLIENT (INTEGRATION)
+# ---------------------------
 @pytest.fixture
 async def async_client():
     transport = ASGITransport(app=app)
