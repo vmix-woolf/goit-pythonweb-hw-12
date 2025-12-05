@@ -19,27 +19,13 @@ async def upload_avatar(
 ):
     """
     Завантажує новий аватар користувача до Cloudinary та оновлює його профіль.
-
-    Args:
-        file: Завантажений файл аватара.
-        session: Асинхронна сесія бази даних.
-        current_user: Авторизований користувач.
-
-    Returns:
-        dict: URL завантаженого аватара.
-
-    Raises:
-        HTTPException: Якщо сталася помилка під час завантаження.
     """
     try:
         avatar_url = await upload_avatar_service(file)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Upload error: {e}")
 
-    # Синхронізація екземпляра користувача із поточною сесією
     db_user = await session.merge(current_user)
-
-    # Оновлення URL аватара
     db_user.avatar_url = avatar_url
     await session.commit()
     await session.refresh(db_user)

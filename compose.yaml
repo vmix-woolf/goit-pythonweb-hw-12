@@ -22,5 +22,19 @@ services:
       - "6379:6379"
     command: [ "redis-server", "--appendonly", "no" ]
 
+  postgres_test:
+    image: postgres:16
+    container_name: contacts_postgres_test
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_TEST_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_TEST_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_TEST_DB}
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+
 volumes:
   postgres_data:
+  postgres_test_data:

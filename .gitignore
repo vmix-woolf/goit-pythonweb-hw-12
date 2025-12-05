@@ -13,6 +13,7 @@ __pycache__
 # Env files
 .env
 *.env
+.env.test
 
 # Alembic migrations cache
 alembic.ini

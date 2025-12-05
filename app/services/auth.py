@@ -4,9 +4,10 @@ from typing import Optional
 from jose import jwt, JWTError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.user import get_user_by_email
-from app.database import async_session
+from app.database import get_session
 from app.models.user import User
 from app.schemas.user import TokenData
 from app.config import settings
@@ -68,24 +69,17 @@ async def verify_token(token: str) -> TokenData:
         )
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    session: AsyncSession = Depends(get_session)  # ← Dependency injection!
+) -> User:
     """
     Повертає поточного користувача на основі переданого JWT токена.
-
-    Args:
-        token: JWT токен із заголовка Authorization.
-
-    Returns:
-        User: Поточний користувач, якщо токен валідний.
-
-    Raises:
-        HTTPException: Якщо користувача не знайдено або токен недійсний.
     """
     token_data = await verify_token(token)
 
-    async with async_session() as session:
-        user = await get_user_by_email(session, token_data.email)
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+    user = await get_user_by_email(session, token_data.email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
 
-        return user
+    return user  # ← без проверки is_verified пока
