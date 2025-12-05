@@ -99,7 +99,8 @@ async def get_current_user(
             username=cached_user["username"],
             password=cached_user.get("password", ""),
             is_verified=cached_user.get("is_verified", True),
-            avatar_url=cached_user.get("avatar_url")
+            avatar_url=cached_user.get("avatar_url"),
+            role=cached_user.get("role", "user")
         )
         return user
 
@@ -115,7 +116,8 @@ async def get_current_user(
         "username": user.username,
         "password": user.password,
         "is_verified": user.is_verified,
-        "avatar_url": user.avatar_url
+        "avatar_url": user.avatar_url,
+        "role": user.role
     }
     await cache_user(user.email, user_dict, expire_time=3600)
 

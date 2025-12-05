@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 
 class UserBase(BaseModel):
@@ -25,22 +25,25 @@ class UserLogin(UserBase):
 
 class UserUpdate(BaseModel):
     """
-    Схема для часткового оновлення профілю користувача.
+    Схема для оновлення користувача.
     """
     username: str | None = None
-    password: str | None = None
+    email: EmailStr | None = None
+    avatar_url: str | None = None
+    role: str | None = None
 
 
 class UserOut(UserBase):
     """
-    Схема відповіді API з даними користувача.
+    Схема виводу користувача.
     """
     id: int
     username: str
-    is_verified: bool
+    is_verified: bool = False
+    avatar_url: str | None = None
+    role: str = "user"
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Token(BaseModel):

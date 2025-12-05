@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy.orm import relationship
-
 from app.models.base import Base
 
 
@@ -16,6 +15,7 @@ class User(Base):
     password = Column(String(255), nullable=False)
     is_verified = Column(Boolean, default=False)
     avatar_url = Column(String, nullable=True)
+    role = Column(String(50), default="user", nullable=False)
 
     # Зв'язок з контактами
     contacts = relationship("Contact", back_populates="owner")
