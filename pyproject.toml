@@ -25,6 +25,7 @@ slowapi = "^0.1.9"
 cloudinary = "^1.44.1"
 python-multipart = "^0.0.20"
 redis = "^7.1.0"
+bcrypt = "4.0.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.0.1"

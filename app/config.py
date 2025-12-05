@@ -46,5 +46,7 @@ class Settings(BaseSettings):
         "populate_by_name": True,
     }
 
+    redis_url: str = "redis://localhost:6379"
+
 
 settings = Settings()
