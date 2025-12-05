@@ -56,3 +56,8 @@ class TokenData(BaseModel):
     Дані, витягнуті з JWT токена.
     """
     email: str
+
+
+class PasswordResetRequest(BaseModel):
+    """Схема для запиту скидання пароля."""
+    email: EmailStr

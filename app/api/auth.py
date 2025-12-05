@@ -8,12 +8,11 @@ from app.services.email import send_verification_email
 from app.services.auth import create_access_token, verify_token, get_current_user
 from app.crud.user import create_user, get_user_by_email, verify_password
 from app.database import get_session
-from app.services.limiter import limiter
-from app.models.user import User
+from app.services.password_reset import create_reset_token, send_password_reset_email
+from app.schemas.user import PasswordResetRequest
 
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
-
 
 @router.post("/signup", response_model=UserOut, status_code=201)
 async def signup(user_data: UserCreate, session: AsyncSession = Depends(get_session)):
@@ -117,3 +116,63 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Async
 
     token = create_access_token({"sub": user.email})
     return {"access_token": token, "token_type": "bearer"}
+
+
+@router.post("/request-reset")
+async def request_password_reset(
+        email: str,
+        session: AsyncSession = Depends(get_session)
+):
+    """
+    Запитує скидання пароля для користувача.
+
+    Args:
+        email: Email користувача для скидання пароля.
+        session: Асинхронна сесія БД.
+
+    Returns:
+        dict: Повідомлення про успішну відправку.
+    """
+    # Перевіряємо чи існує користувач
+    user = await get_user_by_email(session, email)
+    if not user:
+        # Не розкриваємо чи існує користувач (безпека)
+        return {"message": "If user exists, password reset email has been sent"}
+
+    # Генеруємо токен
+    reset_token = await create_reset_token(email)
+
+    # Надсилаємо email
+    await send_password_reset_email(email, reset_token)
+
+    return {"message": "Password reset email has been sent"}
+
+
+@router.post("/request-reset")
+async def request_password_reset(
+        request: PasswordResetRequest,
+        session: AsyncSession = Depends(get_session)
+):
+    """
+    Запитує скидання пароля для користувача.
+
+    Args:
+        request: Запит з email користувача для скидання пароля.
+        session: Асинхронна сесія БД.
+
+    Returns:
+        dict: Повідомлення про успішну відправку.
+    """
+    # Перевіряємо чи існує користувач
+    user = await get_user_by_email(session, str(request.email))
+    if not user:
+        # Не розкриваємо чи існує користувач (безпека)
+        return {"message": "If user exists, password reset email has been sent"}
+
+    # Генеруємо токен
+    reset_token = await create_reset_token(str(request.email))
+
+    # Надсилаємо email
+    await send_password_reset_email(str(request.email), reset_token)
+
+    return {"message": "Password reset email has been sent"}
