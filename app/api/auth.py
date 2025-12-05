@@ -3,13 +3,18 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.user import UserCreate, UserOut
 from app.services.email import send_verification_email
 from app.services.auth import create_access_token, verify_token, get_current_user
-from app.crud.user import create_user, get_user_by_email, verify_password
 from app.database import get_session
-from app.services.password_reset import create_reset_token, send_password_reset_email
-from app.schemas.user import PasswordResetRequest
+
+from app.schemas.user import UserCreate, UserOut, PasswordResetRequest, PasswordReset
+from app.services.password_reset import (
+    create_reset_token,
+    send_password_reset_email,
+    verify_reset_token,
+    delete_reset_token
+)
+from app.crud.user import create_user, get_user_by_email, verify_password, update_user_password
 
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -176,3 +181,44 @@ async def request_password_reset(
     await send_password_reset_email(str(request.email), reset_token)
 
     return {"message": "Password reset email has been sent"}
+
+
+@router.post("/reset-password")
+async def reset_password(
+        request: PasswordReset,
+        session: AsyncSession = Depends(get_session)
+):
+    """
+    Скидає пароль користувача за допомогою токена.
+
+    Args:
+        request: Токен та новий пароль.
+        session: Асинхронна сесія БД.
+
+    Returns:
+        dict: Повідомлення про успішне скидання пароля.
+
+    Raises:
+        HTTPException: Якщо токен недійсний або користувача не знайдено.
+    """
+    # Перевіряємо токен
+    email = await verify_reset_token(request.token)
+    if not email:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+
+    # Знаходимо користувача
+    user = await get_user_by_email(session, email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Оновлюємо пароль
+    await update_user_password(session, user, request.new_password)
+
+    # Видаляємо токен після використання
+    await delete_reset_token(request.token)
+
+    # Очищаємо кеш користувача (якщо був кешований)
+    from app.services.cache import delete_cached_user
+    await delete_cached_user(email)
+
+    return {"message": "Password has been successfully reset"}

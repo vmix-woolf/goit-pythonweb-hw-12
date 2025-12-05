@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UserBase(BaseModel):
@@ -61,3 +61,9 @@ class TokenData(BaseModel):
 class PasswordResetRequest(BaseModel):
     """Схема для запиту скидання пароля."""
     email: EmailStr
+
+
+class PasswordReset(BaseModel):
+    """Схема для скидання пароля."""
+    token: str
+    new_password: str = Field(min_length=6, max_length=100)

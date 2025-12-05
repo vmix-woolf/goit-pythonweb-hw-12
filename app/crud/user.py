@@ -66,3 +66,21 @@ async def authenticate_user(session: AsyncSession, email: str, password: str) ->
         return None
 
     return user
+
+
+async def update_user_password(session: AsyncSession, user: User, new_password: str) -> User:
+    """
+    Оновлює пароль користувача.
+
+    Args:
+        session: Асинхронна сесія БД.
+        user: Користувач для оновлення пароля.
+        new_password: Новий пароль.
+
+    Returns:
+        User: Оновлений користувач.
+    """
+    user.password = hash_password(new_password)
+    await session.commit()
+    await session.refresh(user)
+    return user
