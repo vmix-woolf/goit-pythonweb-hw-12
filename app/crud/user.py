@@ -4,6 +4,7 @@ from passlib.context import CryptContext
 
 from app.models.user import User
 from app.schemas.user import UserCreate
+from typing import Sequence
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -84,3 +85,54 @@ async def update_user_password(session: AsyncSession, user: User, new_password: 
     await session.commit()
     await session.refresh(user)
     return user
+
+
+async def get_all_users(session: AsyncSession, skip: int = 0, limit: int = 100) -> Sequence[User]:  # ← исправь тип
+    """
+    Отримує список всіх користувачів (тільки для админів).
+
+    Args:
+        session: Асинхронна сесія БД.
+        skip: Кількість записів для пропуску.
+        limit: Максимальна кількість записів.
+
+    Returns:
+        Sequence[User]: Список користувачів.  # ← исправь и тут
+    """
+    stmt = select(User).offset(skip).limit(limit)
+    result = await session.execute(stmt)
+    return result.scalars().all()
+
+
+async def update_user_role(session: AsyncSession, user: User, new_role: str) -> User:
+    """
+    Оновлює роль користувача (тільки для админів).
+
+    Args:
+        session: Асинхронна сесія БД.
+        user: Користувач для оновлення.
+        new_role: Нова роль користувача.
+
+    Returns:
+        User: Оновлений користувач.
+    """
+    user.role = new_role
+    await session.commit()
+    await session.refresh(user)
+    return user
+
+
+async def get_user_by_id(session: AsyncSession, user_id: int) -> User | None:
+    """
+    Знаходить користувача за ID.
+
+    Args:
+        session: Асинхронна сесія БД.
+        user_id: ID користувача.
+
+    Returns:
+        User | None: Користувач або None.
+    """
+    stmt = select(User).filter(User.id == user_id)
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()

@@ -70,3 +70,7 @@ class PasswordReset(BaseModel):
     """Схема для скидання пароля."""
     token: str
     new_password: str = Field(min_length=6, max_length=100)
+
+class UserRoleUpdate(BaseModel):
+    """Схема для оновлення ролі користувача."""
+    role: str = Field(pattern="^(user|admin)$", description="Role must be 'user' or 'admin'")
