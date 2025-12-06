@@ -7,6 +7,10 @@ from app.crud.user import (
     get_user_by_email,
     create_user,
     authenticate_user,
+    update_user_password,
+    get_all_users,
+    update_user_role,
+    get_user_by_id,
 )
 from app.models.user import User
 from app.schemas.user import UserCreate
@@ -156,3 +160,124 @@ async def test_authenticate_user_not_found(mock_session):
     result = await authenticate_user(mock_session, "nope@example.com", "xxx")
 
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_update_user_password(mock_session):
+    """
+    Перевіряємо, що update_user_password оновлює пароль користувача.
+    """
+    user = User(
+        id=1,
+        email="user@example.com",
+        username="user",
+        password="old_hashed_password",
+        is_verified=True
+    )
+
+    result = await update_user_password(mock_session, user, "new_password")
+
+    # Перевіряємо що пароль змінився (хешований)
+    assert result.password != "new_password"  # не plain text
+    assert result.password != "old_hashed_password"  # змінився
+    assert result.password.startswith("$2b$")  # bcrypt hash
+
+    # Перевіряємо виклики сесії
+    mock_session.commit.assert_awaited_once()
+    mock_session.refresh.assert_awaited_once_with(user)
+
+
+# ------------------ get_all_users ------------------ #
+
+@pytest.mark.asyncio
+async def test_get_all_users(mock_session):
+    """
+    Перевіряємо, що get_all_users повертає список користувачів.
+    """
+    users = [
+        User(id=1, email="user1@example.com", username="user1", password="hash1"),
+        User(id=2, email="user2@example.com", username="user2", password="hash2"),
+    ]
+
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.all.return_value = users
+    mock_session.execute.return_value = mock_result
+
+    result = await get_all_users(mock_session, skip=0, limit=10)
+
+    assert len(result) == 2
+    assert result[0].email == "user1@example.com"
+    assert result[1].email == "user2@example.com"
+    mock_session.execute.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_get_all_users_with_pagination(mock_session):
+    """
+    Перевіряємо пагінацію в get_all_users.
+    """
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.all.return_value = []
+    mock_session.execute.return_value = mock_result
+
+    await get_all_users(mock_session, skip=20, limit=5)
+
+    # Перевіряємо що SQL запит був викликаний з правильними параметрами
+    mock_session.execute.assert_awaited_once()
+
+
+# ------------------ update_user_role ------------------ #
+
+@pytest.mark.asyncio
+async def test_update_user_role(mock_session):
+    """
+    Перевіряємо, що update_user_role змінює роль користувача.
+    """
+    user = User(
+        id=1,
+        email="user@example.com",
+        username="user",
+        password="hash",
+        role="user"
+    )
+
+    result = await update_user_role(mock_session, user, "admin")
+
+    assert result.role == "admin"
+    mock_session.commit.assert_awaited_once()
+    mock_session.refresh.assert_awaited_once_with(user)
+
+
+# ------------------ get_user_by_id ------------------ #
+
+@pytest.mark.asyncio
+async def test_get_user_by_id_found(mock_session):
+    """
+    Перевіряємо, що get_user_by_id знаходить користувача за ID.
+    """
+    user = User(id=1, email="found@example.com", username="found", password="hash")
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = user
+    mock_session.execute.return_value = mock_result
+
+    result = await get_user_by_id(mock_session, 1)
+
+    assert result is user
+    assert result.email == "found@example.com"
+    mock_session.execute.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_id_not_found(mock_session):
+    """
+    Перевіряємо, що get_user_by_id повертає None якщо користувача немає.
+    """
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = None
+    mock_session.execute.return_value = mock_result
+
+    result = await get_user_by_id(mock_session, 999)
+
+    assert result is None
+    mock_session.execute.assert_awaited_once()

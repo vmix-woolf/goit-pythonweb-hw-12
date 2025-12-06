@@ -19,8 +19,12 @@ from app.crud.user import create_user, get_user_by_email, verify_password, updat
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
+
 @router.post("/signup", response_model=UserOut, status_code=201)
 async def signup(user_data: UserCreate, session: AsyncSession = Depends(get_session)):
+    """
+    Реєструє нового користувача та надсилає лист із підтвердженням email.
+    """
     existing = await get_user_by_email(session, str(user_data.email))
     if existing:
         raise HTTPException(status_code=409, detail="User already exists")
@@ -42,69 +46,6 @@ async def signup(user_data: UserCreate, session: AsyncSession = Depends(get_sess
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), session: AsyncSession = Depends(get_session)):
     """
     Авторизація користувача та видача JWT токена.
-
-    Args:
-        form_data: Email та пароль користувача через OAuth2PasswordRequestForm.
-        session: Асинхронна сесія БД.
-
-    Returns:
-        dict: Access token та тип токена.
-
-    Raises:
-        HTTPException: Якщо email або пароль некоректні.
-    """
-    user = await get_user_by_email(session, form_data.username)  # username містить email
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    if not verify_password(form_data.password, user.password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    token = create_access_token({"sub": user.email})
-    return {"access_token": token, "token_type": "bearer"}
-
-
-@router.get("/verify")
-async def verify_email(token: str, session: AsyncSession = Depends(get_session)):
-    """
-    Підтверджує email користувача на основі токена.
-
-    Args:
-        token: Токен підтвердження email.
-        session: Асинхронна сесія БД.
-
-    Returns:
-        JSONResponse: Повідомлення про успішну верифікацію.
-
-    Raises:
-        HTTPException: Якщо користувача не знайдено.
-    """
-    data = await verify_token(token)
-
-    user = await get_user_by_email(session, data.email)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    user.is_verified = True
-    await session.commit()
-
-    return JSONResponse({"message": "Email successfully verified"})
-
-
-@router.post("/login")
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), session: AsyncSession = Depends(get_session)):
-    """
-    Авторизація користувача та видача JWT токена.
-
-    Args:
-        form_data: Email та пароль користувача через OAuth2PasswordRequestForm.
-        session: Асинхронна сесія БД.
-
-    Returns:
-        dict: Access token та тип токена.
-
-    Raises:
-        HTTPException: Якщо email або пароль некоректні.
     """
     user = await get_user_by_email(session, form_data.username)  # username містить email
     if not user:
@@ -123,50 +64,30 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Async
     return {"access_token": token, "token_type": "bearer"}
 
 
-@router.post("/request-reset")
-async def request_password_reset(
-        email: str,
-        session: AsyncSession = Depends(get_session)
-):
+@router.get("/verify")
+async def verify_email(token: str, session: AsyncSession = Depends(get_session)):
     """
-    Запитує скидання пароля для користувача.
-
-    Args:
-        email: Email користувача для скидання пароля.
-        session: Асинхронна сесія БД.
-
-    Returns:
-        dict: Повідомлення про успішну відправку.
+    Підтверджує email користувача на основі токена.
     """
-    # Перевіряємо чи існує користувач
-    user = await get_user_by_email(session, email)
+    data = await verify_token(token)
+
+    user = await get_user_by_email(session, data.email)
     if not user:
-        # Не розкриваємо чи існує користувач (безпека)
-        return {"message": "If user exists, password reset email has been sent"}
+        raise HTTPException(status_code=404, detail="User not found")
 
-    # Генеруємо токен
-    reset_token = await create_reset_token(email)
+    user.is_verified = True
+    await session.commit()
 
-    # Надсилаємо email
-    await send_password_reset_email(email, reset_token)
-
-    return {"message": "Password reset email has been sent"}
+    return JSONResponse({"message": "Email successfully verified"})
 
 
 @router.post("/request-reset")
 async def request_password_reset(
-        request: PasswordResetRequest,
-        session: AsyncSession = Depends(get_session)
+    request: PasswordResetRequest,
+    session: AsyncSession = Depends(get_session)
 ):
     """
     Запитує скидання пароля для користувача.
-
-    Args:
-        request: Запит з email користувача для скидання пароля.
-        session: Асинхронна сесія БД.
-
-    Returns:
-        dict: Повідомлення про успішну відправку.
     """
     # Перевіряємо чи існує користувач
     user = await get_user_by_email(session, str(request.email))
@@ -185,21 +106,11 @@ async def request_password_reset(
 
 @router.post("/reset-password")
 async def reset_password(
-        request: PasswordReset,
-        session: AsyncSession = Depends(get_session)
+    request: PasswordReset,
+    session: AsyncSession = Depends(get_session)
 ):
     """
     Скидає пароль користувача за допомогою токена.
-
-    Args:
-        request: Токен та новий пароль.
-        session: Асинхронна сесія БД.
-
-    Returns:
-        dict: Повідомлення про успішне скидання пароля.
-
-    Raises:
-        HTTPException: Якщо токен недійсний або користувача не знайдено.
     """
     # Перевіряємо токен
     email = await verify_reset_token(request.token)
