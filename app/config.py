@@ -27,11 +27,11 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60
 
     # SMTP
-    smtp_host: str = Field(alias="SMTP_HOST")
-    smtp_port: int = Field(alias="SMTP_PORT")
-    smtp_user: str = Field(alias="SMTP_USER")
-    smtp_password: str = Field(alias="SMTP_PASSWORD")
-    mail_from: str = Field(alias="MAIL_FROM")
+    smtp_host: str = Field(alias="SMTP_HOST", default="localhost")
+    smtp_port: int = Field(alias="SMTP_PORT", default=1025)
+    smtp_user: str = Field(alias="SMTP_USER", default="")
+    smtp_password: str = Field(alias="SMTP_PASSWORD", default="")
+    mail_from: str = Field(alias="MAIL_FROM", default="noreply@contacts.local")
 
     app_url: str = Field(alias="APP_URL")
 

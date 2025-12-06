@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyo
+*.pyd
+.Python
+.pytest_cache
+.coverage
+htmlcov
+
+# Virtual Environment
+.env.local
+.venv
+venv/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+docs/build
